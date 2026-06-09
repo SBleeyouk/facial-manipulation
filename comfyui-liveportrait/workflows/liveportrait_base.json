@@ -1,0 +1,59 @@
+{
+  "1": {
+    "inputs": { "image": "__SOURCE_IMAGE__", "upload": "image" },
+    "class_type": "LoadImage",
+    "_meta": { "title": "Source (Baseline Face)" }
+  },
+  "2": {
+    "inputs": { "image": "__DRIVING_IMAGE__", "upload": "image" },
+    "class_type": "LoadImage",
+    "_meta": { "title": "Driving (Current Frame)" }
+  },
+  "9": {
+    "inputs": {
+      "rotate_pitch":  0.0,
+      "rotate_yaw":    0.0,
+      "rotate_roll":   0.0,
+      "blink":         0.0,
+      "eyebrow":       0.0,
+      "wink":          0.0,
+      "pupil_x":       0.0,
+      "pupil_y":       0.0,
+      "aaa":           0.0,
+      "eee":           0.0,
+      "woo":           0.0,
+      "smile":         0.0,
+      "src_ratio":     1.0,
+      "sample_ratio":  1.0,
+      "sample_parts":  "All",
+      "crop_factor":   1.7,
+      "src_image":     ["1", 0]
+    },
+    "class_type": "ExpressionEditor",
+    "_meta": { "title": "Expression Editor" }
+  },
+  "10": {
+    "inputs": {
+      "retargeting_eyes":   0.0,
+      "retargeting_mouth":  0.0,
+      "crop_factor":        1.7,
+      "turn_on":            true,
+      "tracking_src_vid":   false,
+      "animate_without_vid": false,
+      "command":            "",
+      "src_images":         ["1", 0],
+      "motion_link":        ["9", 1],
+      "driving_images":     ["2", 0]
+    },
+    "class_type": "AdvancedLivePortrait",
+    "_meta": { "title": "Live Portrait" }
+  },
+  "6": {
+    "inputs": {
+      "images":          ["10", 0],
+      "filename_prefix": "lp_output"
+    },
+    "class_type": "SaveImage",
+    "_meta": { "title": "Save Output" }
+  }
+}

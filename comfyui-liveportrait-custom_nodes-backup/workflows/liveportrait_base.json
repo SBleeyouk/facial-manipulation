@@ -1,0 +1,82 @@
+{
+  "_comment": "ComfyUI API-format workflow. Placeholder strings __SOURCE_IMAGE__ and __DRIVING_IMAGE__ are replaced by workflow_builder.py before each POST. Expression parameters on node '4' are also injected at runtime. Run main.py --validate to print actual INPUT_TYPES from your installed nodes.",
+  "1": {
+    "inputs": {
+      "image": "__SOURCE_IMAGE__"
+    },
+    "class_type": "LoadImage",
+    "_meta": { "title": "Source (Baseline Face)" }
+  },
+  "2": {
+    "inputs": {
+      "image": "__DRIVING_IMAGE__"
+    },
+    "class_type": "LoadImage",
+    "_meta": { "title": "Driving (Current Frame)" }
+  },
+  "3": {
+    "inputs": {
+      "model": "liveportrait"
+    },
+    "class_type": "DownloadAndLoadLivePortraitModels",
+    "_meta": { "title": "Load LivePortrait Models" }
+  },
+  "4": {
+    "inputs": {
+      "pipeline":          ["3", 0],
+      "source_image":      ["1", 0],
+      "driving_images":    ["2", 0],
+      "retargeting_eyes":  0.0,
+      "retargeting_lip":   0.0,
+      "crop_factor":       2.5,
+      "dsize":             512,
+      "scale":             2.3,
+      "vx_ratio":          0.0,
+      "vy_ratio":          -0.125,
+      "relative_motion":   true,
+      "paste_back":        true,
+      "rotate_pitch":      0.0,
+      "rotate_yaw":        0.0,
+      "rotate_roll":       0.0,
+      "brow_inner_up":     0.0,
+      "brow_down_l":       0.0,
+      "brow_down_r":       0.0,
+      "eye_wide_l":        0.0,
+      "eye_wide_r":        0.0,
+      "eye_squint_l":      0.0,
+      "eye_squint_r":      0.0,
+      "cheek_squint_l":    0.0,
+      "cheek_squint_r":    0.0,
+      "nose_sneer_l":      0.0,
+      "nose_sneer_r":      0.0,
+      "mouth_smile_l":     0.0,
+      "mouth_smile_r":     0.0,
+      "mouth_frown_l":     0.0,
+      "mouth_frown_r":     0.0,
+      "mouth_open":        0.0,
+      "mouth_down":        0.0,
+      "lip_tighten":       0.0
+    },
+    "class_type": "LivePortraitProcess",
+    "_meta": { "title": "LivePortrait Process + Expression" }
+  },
+  "5": {
+    "inputs": {
+      "pipeline":        ["3", 0],
+      "source_image":    ["1", 0],
+      "driving_images":  ["2", 0],
+      "motion_template": ["4", 1],
+      "masks":           ["4", 2]
+    },
+    "class_type": "LivePortraitComposite",
+    "_meta": { "title": "LivePortrait Composite" }
+  },
+  "6": {
+    "inputs": {
+      "images":          ["5", 0],
+      "filename_prefix": "lp_output"
+    },
+    "class_type": "SaveImage",
+    "_meta": { "title": "Save Output" }
+  }
+}

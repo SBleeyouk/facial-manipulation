@@ -1,0 +1,7 @@
+opencv-python>=4.8
+mediapipe>=0.10
+websocket-client>=1.7
+requests>=2.31
+python-dotenv>=1.0
+numpy>=1.24
+python-osc>=1.8

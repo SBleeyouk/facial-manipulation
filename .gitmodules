@@ -1,0 +1,6 @@
+[submodule "ComfyUI"]
+	path = ComfyUI
+	url = https://github.com/comfyanonymous/ComfyUI
+[submodule "temp_pretrained_weights"]
+	path = temp_pretrained_weights
+	url = https://huggingface.co/KwaiVGI/LivePortrait
