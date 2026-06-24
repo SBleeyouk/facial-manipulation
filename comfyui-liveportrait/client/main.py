@@ -286,11 +286,19 @@ def main() -> None:
             # 4. Display (never blocks on ComfyUI)
             output_frame = client.get_latest_frame()
 
+            au_anchors = None
+            if output_frame is not None:
+                au_anchors = pose_estimator.extract_au_anchors(output_frame)
+
             frame_count += 1
             elapsed = now - fps_timer
             fps = frame_count / elapsed if elapsed > 0 else 0.0
 
-            display.show(frame, output_frame, expression_state[0], fps_hint=fps)
+            display.show(
+                frame, output_frame, expression_state[0], fps_hint=fps,
+                expr_coeffs=get_full_expression(expression_state[0]),
+                au_anchors=au_anchors,
+            )
 
             # 5. Keyboard
             key = display.poll_key(wait_ms=1)

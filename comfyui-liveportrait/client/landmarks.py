@@ -51,6 +51,22 @@ _LEFT_EYE_L,   _LEFT_EYE_R     =  33, 133
 _RIGHT_EYE_TOP, _RIGHT_EYE_BOT = 386, 374
 _RIGHT_EYE_L,   _RIGHT_EYE_R   = 263, 362
 
+# Named anchor points for the AU overlay (display.py draws arrows/labels here).
+# Indices are standard MediaPipe FaceMesh landmark IDs.
+_AU_ANCHOR_IDS: dict[str, int] = {
+    "brow_l":    105,
+    "brow_r":    334,
+    "eye_l":      33,
+    "eye_r":     263,
+    "mouth_l":    61,
+    "mouth_r":   291,
+    "mouth_top":  13,
+    "mouth_bot":  14,
+    "cheek_l":   205,
+    "cheek_r":   425,
+    "chin":      152,
+}
+
 
 def _ear(lm, top_i: int, bot_i: int, left_i: int, right_i: int) -> float:
     """Eye Aspect Ratio, normalised to [0, 1] (1 = fully open baseline)."""
@@ -123,6 +139,30 @@ class FacePoseEstimator:
             "roll":            roll,
             "retargeting_eyes": round(eye_ear, 3),
         }
+
+    def extract_au_anchors(self, frame: np.ndarray) -> Optional[dict[str, tuple[int, int]]]:
+        """
+        Run face detection on `frame` and return pixel positions (in that
+        frame's own resolution) for the named points in _AU_ANCHOR_IDS, plus
+        a derived "mouth_center" midpoint. Returns None if no face found.
+        """
+        h, w = frame.shape[:2]
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        result = self._detector.detect(mp_image)
+
+        if not result.face_landmarks:
+            return None
+
+        lm = result.face_landmarks[0]
+        anchors = {
+            name: (int(lm[idx].x * w), int(lm[idx].y * h))
+            for name, idx in _AU_ANCHOR_IDS.items()
+        }
+        mx = (anchors["mouth_l"][0] + anchors["mouth_r"][0]) // 2
+        my = (anchors["mouth_top"][1] + anchors["mouth_bot"][1]) // 2
+        anchors["mouth_center"] = (mx, my)
+        return anchors
 
     def close(self) -> None:
         self._detector.close()

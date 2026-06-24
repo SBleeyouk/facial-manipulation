@@ -143,6 +143,45 @@ python composite_pipeline.py --frames 60 --prompt "dramatic cinematic lighting" 
 
 ---
 
+## 6. One-shot LivePortrait → LTX-2.3 video
+
+A second, separate pipeline for when you don't want a real-time loop: capture the webcam **once**, generate **one** emotion-edited still image, then turn it into a single video that goes baseline (sleeping) face → generated emotion → back to the baseline face. It reuses the same LivePortrait expression nodes as the real-time pipeline; it does not touch or replace it.
+
+### Download the LTX-2.3 weights
+
+The video stage uses LTX-2.3 (Lightricks), wired in as a ComfyUI workflow blueprint (`ComfyUI/blueprints/First-Last-Frame to Video (LTX-2.3).json`). These files are **not included** — download them and place them as follows:
+
+| File | Place in | Source |
+|------|----------|--------|
+| `ltx-2.3-22b-distilled-fp8.safetensors` | `ComfyUI/models/checkpoints/` | https://huggingface.co/Lightricks/LTX-2.3-fp8 |
+| `gemma_3_12B_it_fp4_mixed.safetensors` | `ComfyUI/models/text_encoders/` | https://huggingface.co/Comfy-Org/ltx-2 (split_files/text_encoders) |
+
+`oneshot_pipeline.py` checks for these on startup and warns (but doesn't block) if they're missing.
+
+### Run it
+
+```bash
+cd comfyui-liveportrait
+source myvenv/bin/activate    # same venv as the real-time client
+
+python client/oneshot_pipeline.py --expr happy
+```
+
+This will:
+1. Open the webcam once and capture a short burst of frames, picking the most frontal one as the baseline ("sleeping") face — no continuous capture, no live preview.
+2. Upload that baseline image to ComfyUI.
+3. Patch `workflows/liveportrait_to_ltx_oneshot.json` with the chosen `--expr` (same presets as the real-time pipeline: `happy/sad/angry/surprised/neutral`) and write it into `ComfyUI/user/default/workflows/` so it shows up in the ComfyUI UI's workflow list.
+
+### Finish in the browser
+
+Open `http://127.0.0.1:8188`, load the **liveportrait_to_ltx_oneshot** workflow, and click **Queue**.
+
+This last step is manual by design: LTX-2.3 is wired in as a ComfyUI *subgraph*, and subgraph expansion happens in the browser frontend before the graph is sent to the server — there's no reliable way to submit it directly over the REST API. Everything before this step (webcam capture, upload, patching the workflow) is fully automated by `oneshot_pipeline.py`.
+
+The graph does, in order: `LoadImage(baseline)` → `ExpressionEditor` + `AdvancedLivePortrait` (generates the emotion still, same as the real-time pipeline) → two LTX-2.3 "First-Last-Frame to Video" clips (baseline→emotion, then emotion→baseline) → `GetVideoComponents` + `ImageBatch` (concatenates the two clips' frames in time) → `CreateVideo` → `SaveVideo`. Output lands in `ComfyUI/output/liveportrait_ltx_oneshot/`.
+
+---
+
 ## File map
 
 ```
@@ -157,9 +196,11 @@ facial-manipulation/
 │   │   ├── expression.py           # Expression preset → coefficient dict
 │   │   ├── comfyui_client.py       # WebSocket + REST client
 │   │   ├── workflow_builder.py     # Workflow JSON builder (TD-importable)
-│   │   └── display.py              # Side-by-side OpenCV window
+│   │   ├── display.py              # Side-by-side OpenCV window
+│   │   └── oneshot_pipeline.py     # One-shot capture → LivePortrait → LTX-2.3 video
 │   ├── workflows/
-│   │   └── liveportrait_base.json  # ComfyUI API-format workflow template
+│   │   ├── liveportrait_base.json  # ComfyUI API-format workflow template
+│   │   └── liveportrait_to_ltx_oneshot.json  # One-shot UI workflow (LivePortrait + LTX-2.3)
 │   ├── .env.example
 │   └── requirements.txt
 ├── comfyui-liveportrait-custom_nodes-backup/
